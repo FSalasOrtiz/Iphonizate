@@ -6,8 +6,8 @@ import { requireRole } from "../middleware/requireRole.js";
 
 const router = Router();
 
-// Solo Dirección puede administrar usuarios.
-router.use(requireAuth, requireRole("Dirección"));
+// Solo Admin puede administrar usuarios.
+router.use(requireAuth, requireRole("Admin"));
 
 const PIN_RE = /^\d{6}$/;
 
@@ -89,10 +89,10 @@ router.delete("/:id", async (req, res) => {
   const target = await pool.query("SELECT rol FROM users WHERE id = $1", [id]);
   if (!target.rows.length) return res.status(404).json({ error: "Usuario no encontrado." });
 
-  if (target.rows[0].rol === "Dirección") {
-    const { rows: admins } = await pool.query("SELECT id FROM users WHERE rol = 'Dirección'");
+  if (target.rows[0].rol === "Admin") {
+    const { rows: admins } = await pool.query("SELECT id FROM users WHERE rol = 'Admin'");
     if (admins.length <= 1) {
-      return res.status(400).json({ error: "No puedes eliminar al último usuario con rol Dirección." });
+      return res.status(400).json({ error: "No puedes eliminar al último usuario con rol Admin." });
     }
   }
 

@@ -1,11 +1,16 @@
 import React, { useState } from "react";
+import { Check, LogOut } from "lucide-react";
 import { Card, Empty, Badge } from "../components/ui";
 import { useApp } from "../context/AppContext";
+import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import { uid } from "../lib/helpers";
-import { TIENDAS } from "../lib/constants";
+import { TIENDAS, SESSION_TIMEOUT_OPTIONS } from "../lib/constants";
 
 export default function Configuracion() {
   const { data, patch } = useApp();
+  const { session, logout, sessionTimeoutMinutes, setSessionTimeoutMinutes } = useAuth();
+  const { themeId, setThemeId, themes } = useTheme();
   const [nombre, setNombre] = useState("");
   const [tienda, setTienda] = useState("");
   const [key, setKey] = useState(null);
@@ -21,7 +26,47 @@ export default function Configuracion() {
   return (
     <>
       <h1 className="h1">Configuración</h1>
-      <div className="h1-sub">Los Mac que leen los equipos por USB.</div>
+      <div className="h1-sub">Tu sesión, la apariencia de la app y los lectores por USB.</div>
+
+      <Card title="Sesión" subtitle={`Conectado como ${session?.nombre} · ${session?.rol}`}>
+        <div className="session-row">
+          <div>
+            <div className="field-label">CERRAR SESIÓN AUTOMÁTICAMENTE TRAS INACTIVIDAD</div>
+            <select
+              className="select"
+              style={{ marginTop: 6, width: 220 }}
+              value={sessionTimeoutMinutes}
+              onChange={(e) => setSessionTimeoutMinutes(e.target.value)}
+            >
+              {SESSION_TIMEOUT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+          <button className="btn btn-secondary" onClick={logout}>
+            <LogOut size={14} /> Cerrar sesión ahora
+          </button>
+        </div>
+      </Card>
+
+      <Card title="Apariencia" subtitle="Elige el color de acento de toda la app.">
+        <div className="theme-grid">
+          {themes.map((t) => (
+            <button
+              key={t.id}
+              className={`theme-swatch ${themeId === t.id ? "theme-swatch-active" : ""}`}
+              onClick={() => setThemeId(t.id)}
+              title={t.label}
+            >
+              <span className="theme-swatch-dot" style={{ background: `linear-gradient(135deg, ${t.primary}, ${t.secondary})` }}>
+                {themeId === t.id && <Check size={16} />}
+              </span>
+              <span className="theme-swatch-label">{t.label}</span>
+            </button>
+          ))}
+        </div>
+      </Card>
+
       <Card title="Macs lectores (lectura por USB)" subtitle="Los Mac del mostrador con el lector instalado leen el iPhone conectado y llenan el ingreso solo.">
         <div className="inline-form-grid">
           <input className="input" placeholder="ej: Mostrador 1" value={nombre} onChange={(e) => setNombre(e.target.value)} />

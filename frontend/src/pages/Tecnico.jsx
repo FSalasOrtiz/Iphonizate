@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ScanLine, Plus, Trash2 } from "lucide-react";
-import { Card, Empty } from "../components/ui";
+import { Card, Empty, Badge } from "../components/ui";
 import { useApp } from "../context/AppContext";
 import { uid, fmtDateShort, daysBetween, fmtMoney } from "../lib/helpers";
 
@@ -46,9 +46,27 @@ export default function Tecnico() {
     if (!cerrando) return;
     const dias = daysBetween(new Date(cerrando.fechaAsignado), new Date());
     patch("reparaciones", (arr) => [{ id: uid(), modelo: cerrando.modelo, imei: cerrando.imei, tecnico: cerrando.tecnico, servicios, dias, costo: Number(costo), fechaSalida: new Date().toISOString() }, ...arr]);
-    patch("equipos", (arr) => arr.map((e) => (e.id === cerrando.equipoId ? { ...e, estado: "disponible" } : e)));
+
+    if (cerrando.garantiaId) {
+      // Este equipo llegó desde una garantía: vuelve a "vendido" (es del
+      // cliente, no stock nuevo) y la garantía se cierra sola con este arreglo.
+      patch("equipos", (arr) => arr.map((e) => (e.id === cerrando.equipoId ? { ...e, estado: "vendido" } : e)));
+      patch("garantias", (arr) =>
+        arr.map((g) => {
+          if (g.id !== cerrando.garantiaId) return g;
+          const now = new Date();
+          const diasGarantia = daysBetween(new Date(g.fechaIngreso), now);
+          const slaCumplido = now <= new Date(g.slaFecha);
+          return { ...g, estado: "resuelta", tipoArreglo: "Reparación", resolucion: servicios, fechaResuelta: now.toISOString(), dias: diasGarantia, slaCumplido, enTecnico: false };
+        })
+      );
+      addAudit("Cerró una reparación de garantía", `${cerrando.modelo} · ${servicios}`);
+    } else {
+      patch("equipos", (arr) => arr.map((e) => (e.id === cerrando.equipoId ? { ...e, estado: "disponible" } : e)));
+      addAudit("Cerró una reparación", `${cerrando.modelo} · ${servicios}`);
+    }
+
     patch("asignaciones", (arr) => arr.filter((a) => a.id !== cerrando.id));
-    addAudit("Cerró una reparación", `${cerrando.modelo} · ${servicios}`);
     setCerrando(null); setServicios(""); setCosto(0);
   };
 
@@ -84,11 +102,12 @@ export default function Tecnico() {
         {enTaller.length === 0 ? <Empty title="No hay equipos en manos de técnicos." /> : (
           <div className="table-wrap">
             <table className="table">
-              <thead><tr><th>Modelo</th><th>IMEI</th><th>Técnico</th><th>Días</th><th></th></tr></thead>
+              <thead><tr><th>Modelo</th><th>IMEI</th><th>Técnico</th><th>Días</th><th>Origen</th><th></th></tr></thead>
               <tbody>
                 {enTaller.map((a) => (
                   <tr key={a.id}>
                     <td>{a.modelo}</td><td>{a.imei}</td><td>{a.tecnico}</td><td>{daysBetween(new Date(a.fechaAsignado), new Date())}</td>
+                    <td>{a.garantiaId ? <Badge tone="yellow">Garantía</Badge> : <Badge>Revisión</Badge>}</td>
                     <td>
                       {cerrando?.id === a.id ? (
                         <div className="inline-form">

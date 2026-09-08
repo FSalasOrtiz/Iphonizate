@@ -5,11 +5,13 @@ import {
 } from "recharts";
 import { Card, Empty, StatCard, Chip } from "../components/ui";
 import { useApp } from "../context/AppContext";
+import { useTheme } from "../context/ThemeContext";
 import { fmtMoney, downloadCSV, todayISO, daysBetween } from "../lib/helpers";
 import { TIENDAS } from "../lib/constants";
 
 export default function Reportes() {
   const { data } = useApp();
+  const { theme } = useTheme();
   const [preset, setPreset] = useState("Este mes");
   const [tienda, setTienda] = useState("Todas las tiendas");
   const [desde, setDesde] = useState(() => {
@@ -90,11 +92,14 @@ export default function Reportes() {
         <div style={{ height: 220, marginTop: 12 }}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
-              <CartesianGrid stroke="#2a2438" strokeDasharray="3 3" />
-              <XAxis dataKey="dia" stroke="#7c6f8c" fontSize={11} />
-              <YAxis stroke="#7c6f8c" fontSize={11} />
-              <Tooltip contentStyle={{ background: "#171021", border: "1px solid #2b2138", borderRadius: 8, color: "#f3eef7" }} formatter={(v) => fmtMoney(v)} />
-              <Line type="monotone" dataKey="total" stroke="#ec1f80" strokeWidth={2} dot={false} />
+              <CartesianGrid stroke={theme.colors.borderSoft} strokeDasharray="3 3" />
+              <XAxis dataKey="dia" stroke={theme.colors.textFaint} fontSize={11} />
+              <YAxis stroke={theme.colors.textFaint} fontSize={11} />
+              <Tooltip
+                contentStyle={{ background: theme.colors.surface, border: `1px solid ${theme.colors.border}`, borderRadius: 8, color: theme.colors.text }}
+                formatter={(v) => fmtMoney(v)}
+              />
+              <Line type="monotone" dataKey="total" stroke={theme.colors.pink} strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>

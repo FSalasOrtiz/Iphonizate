@@ -1,34 +1,39 @@
 *{ box-sizing:border-box; }
 html, body, #root{ height:100%; margin:0; }
 body{
-  background:#0b0710;
+  background:var(--bg);
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
 }
 
-.ios-app{
+:root{
   --bg:#0b0710; --bg-elev:#130d1c; --surface:#171021; --surface-2:#1d1529;
   --border:#2b2138; --border-soft:#221a2e; --text:#f3eef7; --text-dim:#a99bb8;
-  --text-faint:#7c6f8c; --pink:#ec1f80; --pink-soft:rgba(236,31,128,.15);
+  --text-faint:#7c6f8c;
+  /* Estas tres las sobreescribe ThemeContext según el tema elegido */
+  --pink:#ec1f80; --pink-dark:#c2137f; --pink-secondary:#a020c0; --pink-soft:rgba(236,31,128,.15);
   --green:#34d399; --yellow:#fbbf24; --red:#f87171; --blue:#38bdf8; --purple:#8b5cf6;
   --radius:14px;
+}
+
+.ios-app{
   display:flex; min-height:100vh; background:var(--bg); color:var(--text);
   font-size:14px; position:relative;
 }
-.boot{ display:flex; align-items:center; justify-content:center; height:100vh; color:#a99bb8; background:#0b0710; }
+.boot{ display:flex; align-items:center; justify-content:center; height:100vh; color:var(--text-faint); background:var(--bg); }
 .overlay{ position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:5; display:none; }
 
 /* ---------- login ---------- */
-.login-screen{ min-height:100vh; display:flex; align-items:center; justify-content:center; background:#0b0710; padding:20px; }
+.login-screen{ min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--bg); padding:20px; }
 .login-card{
-  width:100%; max-width:360px; background:#171021; border:1px solid #221a2e; border-radius:16px;
-  padding:28px; color:#f3eef7; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  width:100%; max-width:360px; background:var(--surface); border:1px solid var(--border-soft); border-radius:16px;
+  padding:28px; color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 }
 .login-title{ font-size:20px; font-weight:700; margin:18px 0 2px; }
-.login-sub{ font-size:12px; color:#7c6f8c; margin:0 0 18px; }
-.login-error{ font-size:12px; color:#f87171; margin:4px 0 6px; }
-.login-footnote{ font-size:11px; color:#7c6f8c; text-align:center; margin-top:14px; }
-.icon-input{ display:flex; align-items:center; gap:8px; background:#1d1529; border:1px solid #2b2138; border-radius:10px; padding:10px 12px; margin-top:6px; color:#7c6f8c; }
-.icon-input-field{ flex:1; background:none; border:none; outline:none; color:#f3eef7; font-size:14px; }
+.login-sub{ font-size:12px; color:var(--text-faint); margin:0 0 18px; }
+.login-error{ font-size:12px; color:var(--red); margin:4px 0 6px; }
+.login-footnote{ font-size:11px; color:var(--text-faint); text-align:center; margin-top:14px; }
+.icon-input{ display:flex; align-items:center; gap:8px; background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:10px 12px; margin-top:6px; color:var(--text-faint); }
+.icon-input-field{ flex:1; background:none; border:none; outline:none; color:var(--text); font-size:14px; }
 
 /* ---------- sidebar / topbar ---------- */
 .sidebar{
@@ -36,7 +41,7 @@ body{
   display:flex; flex-direction:column; padding:16px 10px; overflow-y:auto;
 }
 .brand{ display:flex; align-items:center; gap:8px; padding:6px 8px 16px; }
-.brand-badge{ width:24px; height:24px; border-radius:8px; background:linear-gradient(135deg,#ec1f80,#a020c0); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; }
+.brand-badge{ width:24px; height:24px; border-radius:8px; background:linear-gradient(135deg,var(--pink),var(--pink-secondary)); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; }
 .brand-name{ font-weight:700; font-size:14px; }
 .brand-name span{ color:var(--pink); }
 .nav{ display:flex; flex-direction:column; gap:14px; }
@@ -147,7 +152,7 @@ body{
 .margen-line{ font-size:11px; color:var(--text-faint); }
 .btn{ border-radius:10px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); font-size:12.5px; font-weight:600; padding:9px 14px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
 .btn:disabled{ opacity:.4; cursor:not-allowed; }
-.btn-primary{ background:linear-gradient(135deg,#ec1f80,#c2137f); border-color:transparent; color:#fff; }
+.btn-primary{ background:linear-gradient(135deg,var(--pink),var(--pink-dark)); border-color:transparent; color:#fff; }
 .btn-secondary{ background:var(--surface-2); border-color:var(--border); }
 .btn-ghost{ background:none; border-color:transparent; color:var(--text-faint); }
 .btn-block{ width:100%; justify-content:center; margin-top:12px; padding:11px; }
@@ -184,6 +189,32 @@ body{
 .steps-list code{ background:var(--surface-2); padding:1px 6px; border-radius:5px; }
 .key-box{ margin-top:10px; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:10px 12px; font-family:monospace; font-size:12px; word-break:break-all; }
 .foot-note{ display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-faint); margin-top:6px; }
+
+/* ---------- tema / sesión (Configuración) ---------- */
+.theme-grid{ display:flex; flex-wrap:wrap; gap:12px; margin-top:6px; }
+.theme-swatch{ display:flex; flex-direction:column; align-items:center; gap:6px; background:none; border:none; cursor:pointer; padding:4px; border-radius:12px; }
+.theme-swatch:hover{ background:var(--surface-2); }
+.theme-swatch-dot{ width:34px; height:34px; border-radius:50%; border:2px solid transparent; display:flex; align-items:center; justify-content:center; color:#fff; }
+.theme-swatch-active .theme-swatch-dot{ border-color:var(--text); }
+.theme-swatch-label{ font-size:10.5px; color:var(--text-dim); }
+.session-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-top:6px; }
+
+/* ---------- garantías (tarjetas) ---------- */
+.warranty-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; }
+.warranty-card{ background:var(--surface-2); border:1px solid var(--border-soft); border-radius:12px; padding:14px; display:flex; flex-direction:column; gap:8px; }
+.warranty-card-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
+.warranty-card-title{ font-size:13px; font-weight:700; }
+.warranty-card-imei{ font-size:11px; color:var(--text-faint); }
+.warranty-card-cliente{ font-size:12.5px; }
+.warranty-card-falla{ background:var(--surface); border:1px solid var(--border-soft); border-radius:8px; padding:8px 10px; font-size:12px; color:var(--text-dim); }
+.warranty-card-actions{ display:flex; gap:6px; flex-wrap:wrap; }
+.warranty-card-status{ display:flex; align-items:center; gap:6px; font-size:12px; color:var(--yellow); background:rgba(251,191,36,.1); border-radius:8px; padding:8px 10px; }
+.warranty-search-item{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+.warranty-search-title{ font-size:12.5px; font-weight:600; color:var(--text); }
+.warranty-search-sub{ font-size:11px; color:var(--text-faint); }
+.warranty-search-meta{ text-align:right; flex-shrink:0; }
+.warranty-search-tienda{ font-size:11px; font-weight:600; color:var(--pink); }
+.warranty-search-fecha{ font-size:10.5px; color:var(--text-faint); }
 
 @media (max-width: 860px){
   .sidebar{ position:fixed; left:0; top:0; bottom:0; z-index:10; transform:translateX(-100%); transition:transform .2s; }

@@ -15,7 +15,7 @@ export default function Usuarios() {
   const [editingPin, setEditingPin] = useState(null);
   const [newPin, setNewPin] = useState("");
 
-  const isAdmin = session?.rol === "Dirección";
+  const isAdmin = session?.rol === "Admin";
 
   const load = async () => {
     try {
@@ -37,7 +37,7 @@ export default function Usuarios() {
         <h1 className="h1">Usuarios</h1>
         <div className="h1-sub">Gestiona quién puede entrar al sistema y con qué rol.</div>
         <Card>
-          <Empty title="No tienes permiso para ver esta sección." subtitle="Solo las cuentas con rol Dirección pueden administrar usuarios." />
+          <Empty title="No tienes permiso para ver esta sección." subtitle="Solo las cuentas con rol Admin pueden administrar usuarios." />
         </Card>
       </>
     );

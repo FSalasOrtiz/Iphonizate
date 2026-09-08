@@ -33,6 +33,13 @@ export const monthKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMo
 
 export const daysBetween = (a, b) => Math.floor((b - a) / (1000 * 60 * 60 * 24));
 
+export function relativeDays(iso) {
+  const days = daysBetween(new Date(iso), new Date());
+  if (days <= 0) return "hoy";
+  if (days === 1) return "hace 1 día";
+  return `hace ${days} días`;
+}
+
 export function downloadCSV(filename, rows) {
   if (!rows || !rows.length) return;
   const headers = Object.keys(rows[0]);

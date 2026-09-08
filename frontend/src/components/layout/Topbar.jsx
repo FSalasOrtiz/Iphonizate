@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ChevronDown, Check, LogOut, Menu } from "lucide-react";
 import { TIENDAS, TIENDA_COLOR, PAGE_META } from "../../lib/constants";
 import { fmtDateLong } from "../../lib/helpers";
@@ -10,6 +10,28 @@ export default function Topbar({ section, onOpenSidebar }) {
   const { session, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [title, subtitle] = PAGE_META[section];
+  const menuRef = useRef(null);
+
+  // Cierra el menú desplegado al hacer clic afuera o al presionar Escape.
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const onClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+
+    document.addEventListener("mousedown", onClickOutside);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onClickOutside);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [menuOpen]);
 
   return (
     <header className="topbar">
@@ -27,7 +49,7 @@ export default function Topbar({ section, onOpenSidebar }) {
       </div>
 
       <div className="topbar-right">
-        <div className="store-switch">
+        <div className="store-switch" ref={menuRef}>
           <button className="store-pill" onClick={() => setMenuOpen((v) => !v)}>
             <span className="dot" style={{ background: TIENDA_COLOR[activeTienda] }} />
             {activeTienda}
@@ -58,7 +80,13 @@ export default function Topbar({ section, onOpenSidebar }) {
                   <div className="user-role">{session?.rol}</div>
                 </div>
               </div>
-              <button className="store-menu-logout" onClick={logout}>
+              <button
+                className="store-menu-logout"
+                onClick={() => {
+                  setMenuOpen(false);
+                  logout();
+                }}
+              >
                 <LogOut size={14} /> Cerrar sesión
               </button>
             </div>
