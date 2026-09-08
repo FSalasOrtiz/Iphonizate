@@ -23,7 +23,7 @@ export default function Stock() {
     <>
       <h1 className="h1">Stock</h1>
       <div className="h1-sub">Equipos disponibles por tienda, con batería, capacidad y precio de lista.</div>
-      <Card right={<Badge tone="green">● En vivo</Badge>}>
+      <Card right={<Badge tone="green">{base.filter((e) => e.estado === "disponible").length} disponibles</Badge>}>
         <div className="search-row"><Search size={16} /><input className="search-input" placeholder="Escanea o escribe el IMEI y presiona Enter · también busca por modelo o color" value={query} onChange={(e) => setQuery(e.target.value)} /></div>
         <div className="chip-row">
           <span className="field-label">VER TAMBIÉN</span>

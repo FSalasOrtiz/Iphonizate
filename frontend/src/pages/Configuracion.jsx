@@ -58,7 +58,7 @@ export default function Configuracion() {
               onClick={() => setThemeId(t.id)}
               title={t.label}
             >
-              <span className="theme-swatch-dot" style={{ background: `linear-gradient(135deg, ${t.primary}, ${t.secondary})` }}>
+              <span className="theme-swatch-dot" style={{ background: `linear-gradient(135deg, ${t.colors.pink}, ${t.colors.pinkSecondary})` }}>
                 {themeId === t.id && <Check size={16} />}
               </span>
               <span className="theme-swatch-label">{t.label}</span>

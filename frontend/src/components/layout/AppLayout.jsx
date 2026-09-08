@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Clock } from "lucide-react";
+import { HardDriveDownload } from "lucide-react";
 import Sidebar from "./Sidebar.jsx";
 import Topbar from "./Topbar.jsx";
 import { useApp } from "../../context/AppContext";
@@ -67,7 +67,7 @@ export default function AppLayout() {
         <main className="content">
           <Page navigate={setSection} />
           <div className="foot-note">
-            <Clock size={12} /> Los datos se actualizan automáticamente cada minuto.
+            <HardDriveDownload size={12} /> Versión de demostración · los datos se guardan solo en este navegador.
           </div>
         </main>
       </div>

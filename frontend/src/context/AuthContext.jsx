@@ -1,17 +1,18 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
-import { apiFetch, AUTH_KEY } from "../lib/api.js";
+import { seedIfEmpty, verifyLogin, getUserById } from "../lib/localAuth.js";
 
 const AuthContext = createContext(null);
 
+const SESSION_KEY = "iphonizate-session";
 const TIMEOUT_KEY = "iphonizate-session-timeout";
 const DEFAULT_TIMEOUT_MINUTES = 30; // 0 = nunca
 const ACTIVITY_EVENTS = ["mousedown", "mousemove", "keydown", "scroll", "touchstart"];
 const CHECK_INTERVAL_MS = 15000;
 
-function readStoredToken() {
+function readStoredSession() {
   try {
-    const raw = window.localStorage.getItem(AUTH_KEY);
-    return raw ? JSON.parse(raw).token : null;
+    const raw = window.localStorage.getItem(SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
@@ -33,40 +34,32 @@ export function AuthProvider({ children }) {
   const [sessionTimeoutMinutes, setSessionTimeoutMinutesState] = useState(readStoredTimeout);
   const lastActivityRef = useRef(Date.now());
 
-  // Al cargar la app, si hay un token guardado, lo valida contra el
-  // servidor para no obligar a hacer login de nuevo en cada refresh.
+  // Al cargar: crea el usuario inicial si hace falta y restaura la sesión
+  // guardada, revalidando que el usuario siga existiendo (por si lo borraron).
   useEffect(() => {
     (async () => {
-      const token = readStoredToken();
-      if (!token) {
-        setChecking(false);
-        return;
+      await seedIfEmpty();
+      const stored = readStoredSession();
+      if (stored?.userId) {
+        const user = getUserById(stored.userId);
+        if (user) setSession(user);
+        else window.localStorage.removeItem(SESSION_KEY);
       }
-      try {
-        const res = await apiFetch("/auth/me");
-        setSession({ ...res.user, token });
-      } catch {
-        window.localStorage.removeItem(AUTH_KEY);
-      } finally {
-        setChecking(false);
-      }
+      setChecking(false);
     })();
   }, []);
 
   const login = async (usuario, pin) => {
-    try {
-      const res = await apiFetch("/auth/login", { method: "POST", body: { usuario, pin } });
-      window.localStorage.setItem(AUTH_KEY, JSON.stringify({ token: res.token }));
-      setSession({ ...res.user, token: res.token });
-      lastActivityRef.current = Date.now();
-      return { ok: true };
-    } catch (err) {
-      return { ok: false, error: err.message || "No se pudo iniciar sesión." };
-    }
+    const res = await verifyLogin(usuario, pin);
+    if (!res.ok) return { ok: false, error: res.error };
+    window.localStorage.setItem(SESSION_KEY, JSON.stringify({ userId: res.user.id }));
+    setSession(res.user);
+    lastActivityRef.current = Date.now();
+    return { ok: true };
   };
 
   const logout = () => {
-    window.localStorage.removeItem(AUTH_KEY);
+    window.localStorage.removeItem(SESSION_KEY);
     setSession(null);
   };
 

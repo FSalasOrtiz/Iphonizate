@@ -1,9 +1,11 @@
 import React, { useRef, useState } from "react";
-import { Search, Plus, Download, Boxes } from "lucide-react";
+import { Search, Plus, Download, Boxes, Pencil, Trash2 } from "lucide-react";
 import { Card, Empty, Badge, Chip } from "../components/ui";
 import { useApp } from "../context/AppContext";
 import { uid } from "../lib/helpers";
 import { TIENDAS, ESTADO_LABELS, ESTADO_TONE } from "../lib/constants";
+
+const emptyForm = () => ({ imei: "", modelo: "", gb: "", color: "", bateria: 100, ubicacion: TIENDAS[0], costo: 0, precio: 0 });
 
 export default function Inventario() {
   const { data, patch, addAudit } = useApp();
@@ -11,8 +13,9 @@ export default function Inventario() {
   const [ubic, setUbic] = useState("Todas");
   const [estado, setEstado] = useState("Todos");
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const fileRef = useRef(null);
-  const [form, setForm] = useState({ imei: "", modelo: "", gb: "", color: "", bateria: 100, ubicacion: TIENDAS[0], costo: 0, precio: 0 });
+  const [form, setForm] = useState(emptyForm);
 
   const filtered = data.equipos.filter((e) => {
     if (ubic !== "Todas" && e.ubicacion !== ubic) return false;
@@ -26,13 +29,39 @@ export default function Inventario() {
     return acc;
   }, {});
 
-  const agregar = () => {
-    if (!form.imei || !form.modelo) return;
-    const eq = { id: uid(), ...form, gb: String(form.gb), bateria: Number(form.bateria), costo: Number(form.costo), precio: Number(form.precio), estado: "disponible", fechaIngreso: new Date().toISOString() };
-    patch("equipos", (arr) => [eq, ...arr]);
-    addAudit("Ingresó un equipo", `${eq.modelo} · ${eq.imei}`, eq.ubicacion);
-    setForm({ imei: "", modelo: "", gb: "", color: "", bateria: 100, ubicacion: TIENDAS[0], costo: 0, precio: 0 });
+  const resetForm = () => {
+    setForm(emptyForm());
+    setEditingId(null);
     setShowForm(false);
+  };
+
+  const guardar = () => {
+    if (!form.imei || !form.modelo) return;
+    const campos = {
+      imei: form.imei, modelo: form.modelo, gb: String(form.gb), color: form.color,
+      bateria: Number(form.bateria), ubicacion: form.ubicacion, costo: Number(form.costo), precio: Number(form.precio),
+    };
+    if (editingId) {
+      patch("equipos", (arr) => arr.map((e) => (e.id === editingId ? { ...e, ...campos } : e)));
+      addAudit("Editó un equipo", `${campos.modelo} · ${campos.imei}`, campos.ubicacion);
+    } else {
+      patch("equipos", (arr) => [{ id: uid(), ...campos, estado: "disponible", fechaIngreso: new Date().toISOString() }, ...arr]);
+      addAudit("Ingresó un equipo", `${campos.modelo} · ${campos.imei}`, campos.ubicacion);
+    }
+    resetForm();
+  };
+
+  const startEdit = (e) => {
+    setEditingId(e.id);
+    setForm({ imei: e.imei, modelo: e.modelo, gb: e.gb, color: e.color, bateria: e.bateria, ubicacion: e.ubicacion, costo: e.costo, precio: e.precio });
+    setShowForm(true);
+  };
+
+  const eliminar = (e) => {
+    const extra = e.estado !== "disponible" ? `\n\nOJO: este equipo está en estado "${ESTADO_LABELS[e.estado]}".` : "";
+    if (!window.confirm(`¿Eliminar ${e.modelo} · ${e.imei} del inventario?${extra}`)) return;
+    patch("equipos", (arr) => arr.filter((x) => x.id !== e.id));
+    addAudit("Eliminó un equipo", `${e.modelo} · ${e.imei}`, e.ubicacion);
   };
 
   const onFile = (ev) => {
@@ -71,23 +100,27 @@ export default function Inventario() {
         <div className="row-actions">
           <input ref={fileRef} type="file" accept=".csv" style={{ display: "none" }} onChange={onFile} />
           <button className="btn btn-secondary" onClick={() => fileRef.current?.click()}><Download size={14} /> Importar desde Excel</button>
-          <button className="btn btn-primary" onClick={() => setShowForm((v) => !v)}><Plus size={14} /> Ingresar equipo</button>
+          <button className="btn btn-primary" onClick={() => (showForm ? resetForm() : setShowForm(true))}><Plus size={14} /> Ingresar equipo</button>
         </div>
       }>
         {showForm && (
-          <div className="inline-form-grid">
-            <input className="input" placeholder="IMEI" value={form.imei} onChange={(e) => setForm((f) => ({ ...f, imei: e.target.value }))} />
-            <input className="input" placeholder="Modelo" value={form.modelo} onChange={(e) => setForm((f) => ({ ...f, modelo: e.target.value }))} />
-            <input className="input" placeholder="GB" value={form.gb} onChange={(e) => setForm((f) => ({ ...f, gb: e.target.value }))} />
-            <input className="input" placeholder="Color" value={form.color} onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))} />
-            <input className="input" type="number" placeholder="Batería %" value={form.bateria} onChange={(e) => setForm((f) => ({ ...f, bateria: e.target.value }))} />
-            <select className="select" value={form.ubicacion} onChange={(e) => setForm((f) => ({ ...f, ubicacion: e.target.value }))}>
-              {TIENDAS.map((t) => <option key={t}>{t}</option>)}
-            </select>
-            <input className="input" type="number" placeholder="Costo" value={form.costo} onChange={(e) => setForm((f) => ({ ...f, costo: e.target.value }))} />
-            <input className="input" type="number" placeholder="Precio" value={form.precio} onChange={(e) => setForm((f) => ({ ...f, precio: e.target.value }))} />
-            <button className="btn btn-primary" onClick={agregar}>Guardar equipo</button>
-          </div>
+          <>
+            {editingId && <div className="editing-hint">Editando equipo</div>}
+            <div className="inline-form-grid">
+              <input className="input" placeholder="IMEI" value={form.imei} onChange={(e) => setForm((f) => ({ ...f, imei: e.target.value }))} />
+              <input className="input" placeholder="Modelo" value={form.modelo} onChange={(e) => setForm((f) => ({ ...f, modelo: e.target.value }))} />
+              <input className="input" placeholder="GB" value={form.gb} onChange={(e) => setForm((f) => ({ ...f, gb: e.target.value }))} />
+              <input className="input" placeholder="Color" value={form.color} onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))} />
+              <input className="input" type="number" placeholder="Batería %" value={form.bateria} onChange={(e) => setForm((f) => ({ ...f, bateria: e.target.value }))} />
+              <select className="select" value={form.ubicacion} onChange={(e) => setForm((f) => ({ ...f, ubicacion: e.target.value }))}>
+                {TIENDAS.map((t) => <option key={t}>{t}</option>)}
+              </select>
+              <input className="input" type="number" placeholder="Costo" value={form.costo} onChange={(e) => setForm((f) => ({ ...f, costo: e.target.value }))} />
+              <input className="input" type="number" placeholder="Precio" value={form.precio} onChange={(e) => setForm((f) => ({ ...f, precio: e.target.value }))} />
+              <button className="btn btn-primary" onClick={guardar}>{editingId ? "Guardar cambios" : "Guardar equipo"}</button>
+              {editingId && <button className="btn btn-ghost" onClick={resetForm}>Cancelar</button>}
+            </div>
+          </>
         )}
 
         <div className="search-row" style={{ marginTop: 12 }}><Search size={16} /><input className="search-input" placeholder="Escanea o escribe el IMEI y presiona Enter · también busca por modelo o color" value={query} onChange={(e) => setQuery(e.target.value)} /></div>
@@ -110,12 +143,16 @@ export default function Inventario() {
         ) : (
           <div className="table-wrap">
             <table className="table">
-              <thead><tr><th>IMEI</th><th>Modelo</th><th>GB</th><th>Color</th><th>Batería</th><th>Ubicación</th><th>Estado</th></tr></thead>
+              <thead><tr><th>IMEI</th><th>Modelo</th><th>GB</th><th>Color</th><th>Batería</th><th>Ubicación</th><th>Estado</th><th></th></tr></thead>
               <tbody>
                 {filtered.map((e) => (
                   <tr key={e.id}>
                     <td>{e.imei}</td><td>{e.modelo}</td><td>{e.gb}</td><td>{e.color}</td><td>{e.bateria}%</td><td>{e.ubicacion}</td>
                     <td><Badge tone={ESTADO_TONE[e.estado]}>{ESTADO_LABELS[e.estado]}</Badge></td>
+                    <td className="row-actions">
+                      <button className="btn-icon" title="Editar" onClick={() => startEdit(e)}><Pencil size={14} /></button>
+                      <button className="btn-icon" title="Eliminar" onClick={() => eliminar(e)}><Trash2 size={14} /></button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

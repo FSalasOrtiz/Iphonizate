@@ -6,7 +6,7 @@ import { uid, fmtDateShort } from "../lib/helpers";
 import { TIENDAS } from "../lib/constants";
 
 export default function Movimientos() {
-  const { data, patch, addAudit } = useApp();
+  const { data, patch, addAudit, session } = useApp();
   const [origen, setOrigen] = useState("");
   const [destino, setDestino] = useState("");
   const [imei, setImei] = useState("");
@@ -21,11 +21,11 @@ export default function Movimientos() {
   };
 
   const confirmar = () => {
-    if (!origen || !destino || pendientes.length === 0) return;
+    if (!origen || !destino || origen === destino || pendientes.length === 0) return;
     const ids = pendientes.map((p) => p.id);
     patch("equipos", (arr) => arr.map((e) => (ids.includes(e.id) ? { ...e, ubicacion: destino } : e)));
     patch("movimientos", (arr) => [
-      ...pendientes.map((p) => ({ id: uid(), equipo: `${p.modelo} · ${p.imei}`, desde: origen, hacia: destino, fecha: new Date().toISOString(), quien: "Renato" })),
+      ...pendientes.map((p) => ({ id: uid(), equipo: `${p.modelo} · ${p.imei}`, desde: origen, hacia: destino, fecha: new Date().toISOString(), quien: session?.nombre || "—" })),
       ...arr,
     ]);
     addAudit("Trasladó equipos", `${pendientes.length} equipo(s) de ${origen} a ${destino}`);
@@ -62,7 +62,10 @@ export default function Movimientos() {
             ))}
           </div>
         )}
-        <button className="btn btn-primary btn-block" disabled={!origen || !destino || pendientes.length === 0} onClick={confirmar}>Confirmar traslado de {pendientes.length} equipos</button>
+        {origen && destino && origen === destino && (
+          <div className="warn-text" style={{ marginTop: 8 }}>El origen y el destino no pueden ser la misma tienda.</div>
+        )}
+        <button className="btn btn-primary btn-block" disabled={!origen || !destino || origen === destino || pendientes.length === 0} onClick={confirmar}>Confirmar traslado de {pendientes.length} equipos</button>
       </Card>
 
       <Card title="Historial de movimientos">

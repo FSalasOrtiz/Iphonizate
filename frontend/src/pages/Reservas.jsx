@@ -40,7 +40,7 @@ export default function Reservas() {
 
   const completar = (r) => {
     const venta = {
-      id: uid(), fecha: new Date().toISOString(), tienda: activeTienda, clienteId: r.clienteId, clienteNombre: r.clienteNombre,
+      id: uid(), fecha: new Date().toISOString(), tienda: r.tienda, clienteId: r.clienteId, clienteNombre: r.clienteNombre,
       equipoIds: r.equipoIds, accesorios: [], subtotalEquipos: r.total, subtotalAcc: 0, total: r.total,
       margen: data.equipos.filter((e) => r.equipoIds.includes(e.id)).reduce((s, e) => s + (e.precio - e.costo), 0),
       conBoleta: true, metodoPago: "Efectivo", reviewStatus: "pendiente",
@@ -48,7 +48,7 @@ export default function Reservas() {
     patch("ventas", (arr) => [venta, ...arr]);
     patch("equipos", (arr) => arr.map((e) => (r.equipoIds.includes(e.id) ? { ...e, estado: "vendido" } : e)));
     patch("reservas", (arr) => arr.map((x) => (x.id === r.id ? { ...x, estado: "completada" } : x)));
-    addAudit("Completó una reserva", `Reserva de ${r.clienteNombre || "cliente"} pasó a venta`, activeTienda);
+    addAudit("Completó una reserva", `Reserva de ${r.clienteNombre || "cliente"} pasó a venta`, r.tienda);
   };
 
   const cancelar = (r) => {

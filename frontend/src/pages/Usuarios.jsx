@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Plus, Unlock, Trash2, KeyRound } from "lucide-react";
 import { Card, Empty, Badge } from "../components/ui";
-import { apiFetch } from "../lib/api.js";
 import { useAuth } from "../context/AuthContext";
 import { ROLES } from "../lib/constants";
 import { fmtDateShort } from "../lib/helpers";
+import { listUsers, createUser, updateUser, deleteUser } from "../lib/localAuth.js";
 
 export default function Usuarios() {
   const { session } = useAuth();
@@ -17,14 +17,7 @@ export default function Usuarios() {
 
   const isAdmin = session?.rol === "Admin";
 
-  const load = async () => {
-    try {
-      const res = await apiFetch("/users");
-      setUsers(res.users);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
+  const load = () => setUsers(listUsers());
 
   useEffect(() => {
     if (isAdmin) load();
@@ -45,36 +38,25 @@ export default function Usuarios() {
 
   const crear = async () => {
     setError("");
-    if (!form.usuario || !form.pin || !form.nombre) {
-      setError("Usuario, PIN y nombre son obligatorios.");
-      return;
-    }
-    try {
-      await apiFetch("/users", { method: "POST", body: form });
-      setForm({ usuario: "", pin: "", nombre: "", rol: ROLES[0] });
-      setShowForm(false);
-      load();
-    } catch (err) {
-      setError(err.message);
-    }
+    const res = await createUser(form);
+    if (!res.ok) return setError(res.error);
+    setForm({ usuario: "", pin: "", nombre: "", rol: ROLES[0] });
+    setShowForm(false);
+    load();
   };
 
   const cambiarRol = async (id, rol) => {
-    try {
-      await apiFetch(`/users/${id}`, { method: "PATCH", body: { rol } });
-      load();
-    } catch (err) {
-      setError(err.message);
-    }
+    setError("");
+    const res = await updateUser(id, { rol });
+    if (!res.ok) return setError(res.error);
+    load();
   };
 
   const desbloquear = async (id) => {
-    try {
-      await apiFetch(`/users/${id}`, { method: "PATCH", body: { unlock: true } });
-      load();
-    } catch (err) {
-      setError(err.message);
-    }
+    setError("");
+    const res = await updateUser(id, { unlock: true });
+    if (!res.ok) return setError(res.error);
+    load();
   };
 
   const resetPin = async (id) => {
@@ -83,24 +65,19 @@ export default function Usuarios() {
       setError("El nuevo PIN debe tener exactamente 6 dígitos.");
       return;
     }
-    try {
-      await apiFetch(`/users/${id}`, { method: "PATCH", body: { pin: newPin } });
-      setEditingPin(null);
-      setNewPin("");
-      load();
-    } catch (err) {
-      setError(err.message);
-    }
+    const res = await updateUser(id, { pin: newPin });
+    if (!res.ok) return setError(res.error);
+    setEditingPin(null);
+    setNewPin("");
+    load();
   };
 
-  const eliminar = async (id, nombre) => {
+  const eliminar = (id, nombre) => {
+    setError("");
     if (!window.confirm(`¿Eliminar a ${nombre}? No va a poder volver a iniciar sesión.`)) return;
-    try {
-      await apiFetch(`/users/${id}`, { method: "DELETE" });
-      load();
-    } catch (err) {
-      setError(err.message);
-    }
+    const res = deleteUser(id, session?.id);
+    if (!res.ok) return setError(res.error);
+    load();
   };
 
   return (
@@ -132,7 +109,7 @@ export default function Usuarios() {
               <thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Estado</th><th>Creado</th><th></th></tr></thead>
               <tbody>
                 {users.map((u) => {
-                  const locked = u.locked_until && new Date(u.locked_until) > new Date();
+                  const locked = u.lockedUntil && new Date(u.lockedUntil) > new Date();
                   return (
                     <tr key={u.id}>
                       <td>{u.usuario}</td>
@@ -143,7 +120,7 @@ export default function Usuarios() {
                         </select>
                       </td>
                       <td>{locked ? <Badge tone="red">Bloqueado</Badge> : <Badge tone="green">Activo</Badge>}</td>
-                      <td>{fmtDateShort(u.created_at)}</td>
+                      <td>{fmtDateShort(u.createdAt)}</td>
                       <td className="row-actions">
                         {locked && (
                           <button className="btn btn-secondary" onClick={() => desbloquear(u.id)}>

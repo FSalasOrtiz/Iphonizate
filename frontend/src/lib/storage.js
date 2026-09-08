@@ -1,24 +1,24 @@
-// Persistencia contra la API real (ver backend/). Reemplaza al antiguo
-// localStorage: ahora los datos son compartidos entre dispositivos y
-// requieren sesión.
-import { apiFetch } from "./api.js";
+// Persistencia local en el navegador. Toda la operación (equipos, ventas,
+// clientes, etc.) vive como un único documento JSON en localStorage. Es por
+// dispositivo: no se comparte entre navegadores ni computadores.
+const DATA_KEY = "iphonizate-data";
 
 export async function loadData() {
   try {
-    const res = await apiFetch("/data");
-    return res?.data ?? null;
+    const raw = window.localStorage.getItem(DATA_KEY);
+    return raw ? JSON.parse(raw) : null;
   } catch (err) {
-    console.error("No se pudo cargar la información del servidor:", err);
+    console.error("No se pudo leer la información guardada:", err);
     return null;
   }
 }
 
 export async function saveData(data) {
   try {
-    await apiFetch("/data", { method: "PUT", body: { data } });
+    window.localStorage.setItem(DATA_KEY, JSON.stringify(data));
     return true;
   } catch (err) {
-    console.error("No se pudo guardar en el servidor:", err);
+    console.error("No se pudo guardar la información:", err);
     return false;
   }
 }

@@ -3,80 +3,62 @@
 Panel de gestión para tiendas de celulares — ventas, reservas, garantías,
 inventario, técnico, caja, reportes, auditoría y más.
 
-Este repo tiene dos partes:
+## Demo en vivo
 
-```
-frontend/   App en React (Vite) — lo que ve el usuario
-backend/    API en Node/Express + PostgreSQL — login y datos compartidos
-```
+👉 **https://fsalasortiz.github.io/Iphonizate/**
 
-Antes los datos vivían solo en el navegador (`localStorage`). Ahora viven en
-una base de datos real: cualquier dispositivo con sesión ve la misma
-información, y hay login de verdad (usuario + PIN, con el PIN encriptado).
+Entra con:
 
-## Correrlo en tu computador
-
-**1. Levanta la base de datos** (necesitas [Docker](https://docs.docker.com/get-docker/) instalado):
-```bash
-docker compose up -d
-```
-
-**2. Prepara y levanta el backend** (en una terminal):
-```bash
-cd backend
-cp .env.example .env
-npm install
-npm run migrate
-npm run seed
-npm run dev
-```
-Debería quedar corriendo en `http://localhost:4000`.
-
-**3. Prepara y levanta el frontend** (en otra terminal, sin cerrar la anterior):
-```bash
-cd frontend
-cp .env.example .env
-npm install
-npm run dev
-```
-Abre la URL que te muestre (normalmente `http://localhost:5173`).
-
-**4. Entra con las credenciales de prueba:**
 - Usuario: `renato`
 - PIN: `123456`
 
-(Puedes cambiarlas editando `SEED_PIN` etc. en `backend/.env` antes de
-correr `npm run seed`, o volviendo a correr el seed con otros valores.)
+Es una **versión de demostración**: funciona sin servidor y **los datos se
+guardan solo en el navegador que estés usando** (no se comparten entre
+computadores ni personas). Para borrar todo y empezar de cero, limpia los
+datos del sitio en tu navegador.
 
-## Cómo ponerlo en internet (para usarlo desde `iphonizate.app` de nuevo)
+## Cómo está organizado el repo
 
-La forma más simple para partir:
+```
+frontend/   App en React (Vite) — es lo que se publica en la demo
+backend/    API en Node/Express + PostgreSQL — para la versión con datos
+            compartidos entre dispositivos. Hoy la app NO lo usa.
+```
 
-1. **Backend + base de datos → [Railway](https://railway.app)**
-   Instrucciones detalladas en `backend/README.md`. En resumen: subes el
-   código, agregas un plugin de Postgres, defines las variables de entorno,
-   y Railway te da una URL pública para tu API.
+### Correr el frontend en tu computador
 
-2. **Frontend → cualquier hosting de sitios estáticos** (Vercel, Netlify,
-   Cloudflare Pages, o el mismo Railway). El build es `npm run build` dentro
-   de `frontend/`, que genera una carpeta `dist/` lista para servir. Define
-   `VITE_API_URL` apuntando a la URL de tu backend en Railway.
+Necesitas [Node.js](https://nodejs.org/) 20 o superior.
 
-3. **Dominio propio**: una vez que el frontend esté desplegado, conectas tu
-   dominio `iphonizate.app` desde el panel del hosting que elijas (todos
-   tienen una sección de "Custom domain").
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-Si en algún punto te trabas con el despliegue, cuéntame en qué paso estás y
-seguimos desde ahí — no hace falta que lo resuelvas todo de una vez.
+Abre la URL que muestra (normalmente `http://localhost:5173`).
 
-## Qué NO incluye todavía (para ser honesto sobre el alcance)
+### Publicar la demo (GitHub Pages)
 
-- Pantalla para crear/editar usuarios desde la app (por ahora se hace con
-  `npm run seed` en el backend).
-- Roles con permisos distintos (todos los que inician sesión ven todo).
-- Backups automáticos de la base de datos — eso depende del proveedor que
-  elijas (Railway y Render ofrecen backups en sus planes pagos).
-- El lector USB de Mac sigue siendo solo el formulario de referencia; eso
-  requeriría una app nativa aparte.
+Ya está configurado. Cada vez que se hace `push` a la rama `main`, GitHub
+Actions (`.github/workflows/deploy.yml`) compila `frontend/` y lo publica.
 
-Todo esto es agregable después si lo necesitas — dímelo y lo vemos.
+Para activarlo la primera vez: en el repo de GitHub, **Settings → Pages →
+Build and deployment → Source: GitHub Actions**.
+
+Si cambias el nombre del repositorio, ajusta el `BASE_PATH` en el workflow y
+el `base` de `frontend/vite.config.js`.
+
+## Volver a la versión con base de datos (más adelante)
+
+El código del backend (`backend/`) sigue acá para cuando quieras datos
+compartidos entre dispositivos y login real. En ese momento hay que:
+
+1. Levantar `backend/` con PostgreSQL (ver `backend/README.md`).
+2. Volver a apuntar `frontend/src/lib/storage.js` y
+   `frontend/src/context/AuthContext.jsx` a la API en vez de `localStorage`.
+
+## Qué NO incluye la demo
+
+- Datos compartidos entre dispositivos (cada navegador tiene los suyos).
+- Backups.
+- El lector USB de Mac es solo el formulario de referencia.

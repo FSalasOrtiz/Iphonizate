@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Search, Plus, X, Users, Trash2 } from "lucide-react";
 import { Card, Empty, Chip } from "../components/ui";
 import { useApp } from "../context/AppContext";
@@ -17,6 +17,12 @@ export default function Vender() {
   const [nuevoCliente, setNuevoCliente] = useState({ nombre: "", telefono: "" });
   const [conBoleta, setConBoleta] = useState(false);
   const [metodoPago, setMetodoPago] = useState(METODOS_PAGO[0]);
+  const [flash, setFlash] = useState("");
+
+  // El aviso de "venta registrada" desaparece apenas se arma una venta nueva.
+  useEffect(() => {
+    if (carritoEquipos.length || carritoAcc.length) setFlash("");
+  }, [carritoEquipos, carritoAcc]);
 
   const equiposDisp = data.equipos.filter(
     (e) =>
@@ -68,7 +74,9 @@ export default function Vender() {
       })
     );
     addAudit("Registró una venta", `${equiposEnCarrito.length} equipo(s) · ${fmtMoney(total)}`, activeTienda);
+    setFlash(`Venta registrada · ${fmtMoney(total)}. Queda pendiente de revisión de pagos.`);
     setCarritoEquipos([]); setCarritoAcc([]); setClienteSel(null); setConBoleta(false); setQuery("");
+    setMetodoPago(METODOS_PAGO[0]);
   };
 
   return (
@@ -221,7 +229,8 @@ export default function Vender() {
           <div className="margen-line">Margen estimado {fmtMoney(margen)}</div>
         </div>
 
-        <button className="btn btn-primary btn-block" disabled={!canSell} onClick={confirmar}>Continuar al pago</button>
+        {flash && <div className="flash-ok">{flash}</div>}
+        <button className="btn btn-primary btn-block" disabled={!canSell} onClick={confirmar}>Registrar venta</button>
       </Card>
     </>
   );

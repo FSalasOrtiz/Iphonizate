@@ -58,7 +58,7 @@ export function AppProvider({ children }) {
     ]);
   };
 
-  const value = { data, patch, addAudit, loaded, activeTienda, setActiveTienda };
+  const value = { data, patch, addAudit, loaded, activeTienda, setActiveTienda, session };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

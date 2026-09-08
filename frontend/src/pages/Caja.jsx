@@ -6,7 +6,7 @@ import { uid, fmtMoney, todayISO } from "../lib/helpers";
 import { METODOS_PAGO } from "../lib/constants";
 
 export default function Caja() {
-  const { data, patch, activeTienda, addAudit } = useApp();
+  const { data, patch, activeTienda, addAudit, session } = useApp();
   const [fecha, setFecha] = useState(todayISO());
   const [fondoInicial, setFondoInicial] = useState(0);
   const [contado, setContado] = useState({ Efectivo: 0, Transferencia: 0, Crédito: 0, "Parte de pago": 0 });
@@ -33,7 +33,7 @@ export default function Caja() {
     const diffDinero = METODOS_PAGO.reduce((s, m) => s + (Number(contado[m]) - esperado[m]), 0);
     const faltantes = activos.length - contados.length;
     patch("cierresCaja", (arr) => [
-      { id: uid(), tienda: activeTienda, fecha, fondoInicial: Number(fondoInicial), contado, esperado, diffDinero, faltantes, cerro: "Renato" },
+      { id: uid(), tienda: activeTienda, fecha, fondoInicial: Number(fondoInicial), contado, esperado, diffDinero, faltantes, cerro: session?.nombre || "—" },
       ...arr,
     ]);
     addAudit("Cerró caja", `${activeTienda} · ${fecha}`, activeTienda);

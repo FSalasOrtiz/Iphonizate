@@ -189,6 +189,10 @@ body{
 .steps-list code{ background:var(--surface-2); padding:1px 6px; border-radius:5px; }
 .key-box{ margin-top:10px; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:10px 12px; font-family:monospace; font-size:12px; word-break:break-all; }
 .foot-note{ display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-faint); margin-top:6px; }
+.flash-ok{ margin-top:12px; font-size:12px; color:var(--green); background:rgba(52,211,153,.12); border:1px solid rgba(52,211,153,.3); border-radius:9px; padding:9px 12px; }
+.editing-hint{ font-size:11px; color:var(--pink); font-weight:600; margin-bottom:6px; }
+.client-row-top{ display:flex; align-items:center; justify-content:space-between; gap:8px; background:var(--surface-2); padding:11px 14px; }
+.client-row-top .client-row-head{ background:none; padding:0; flex:1; }
 
 /* ---------- tema / sesión (Configuración) ---------- */
 .theme-grid{ display:flex; flex-wrap:wrap; gap:12px; margin-top:6px; }
